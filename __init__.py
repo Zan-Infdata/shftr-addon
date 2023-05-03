@@ -35,12 +35,6 @@ bl_info = {
 
 def register():
 
-    #bpy.types.Scene.uname = initUsernameProperty()
-    #bpy.types.Scene.pwd = initPasswordProperty()
-    #bpy.types.Scene.ais = initArtIsSetProperty()
-
-    
-
     for cls in _classes:
         bpy.utils.register_class(cls)
 

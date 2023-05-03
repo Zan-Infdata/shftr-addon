@@ -38,30 +38,6 @@ class My_Properties(bpy.types.PropertyGroup):
         default='Model description'
     )
 
-def initUsernameProperty():
-    out = bpy.props.StringProperty(
-        name='Username',
-        description='Enter your Shapeshifter account username',
-    )
-    return out
-
-def initPasswordProperty():
-    out = bpy.props.StringProperty(
-        name='Password',
-        description='Enter your Shapeshifter account password',
-        subtype = 'PASSWORD',
-    )
-    return out
-
-def initArtIsSetProperty():
-    out = bpy.props.IntProperty(
-        name='ArtIsSet',
-        description='Check if article is set',
-        default=-1,
-
-    )
-    return out
-
 
 
 

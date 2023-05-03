@@ -28,27 +28,41 @@ class CUSTOM_OT_Post_Operator(Operator):
 
     def execute(self,context):
 
-        addResp = self.addModel(context)
+        jwt_resp = self.login(context)
+        jwt_json = json.loads(jwt_resp.text)
+
+        # invalid login
+        if "message" in jwt_json:
+            self.report({'ERROR'}, jwt_json['message'])
+            return {'FINISHED'}
+
+
+        jwt = jwt_json["token"]
+
+
+        addResp = self.addModel(context, jwt)
         addResp_json = json.loads(addResp.text)
 
+        # get response parameters and pass them
         mid = addResp_json["DATA"]["insertId"]
+        uid = addResp_json["DATA"]["userId"]
 
-        self.uploadModel(context,mid)
+        self.uploadModel(context,mid,uid, jwt)
+
+        self.report({'INFO'},"Uploaded successfully")
 
         return {'FINISHED'}
     
 
-
-    def addModel(self, context):
+    
+    def login(self,context):
 
         data = {
-            "modName" : context.scene.my_props.mod_name,
-            "modDesc" : context.scene.my_props.mod_desc,
-            "artId" : context.scene.my_props.ais,
+            "uname": context.scene.my_props.uname,
+            "pwd": context.scene.my_props.pwd
         }
 
-
-        api_url = 'http://localhost:3001/model/add'
+        api_url = 'http://localhost:3001/login'
 
         response = None
 
@@ -56,7 +70,7 @@ class CUSTOM_OT_Post_Operator(Operator):
             response = requests.post(url=api_url, data = data)
 
             if response.ok:
-                print("Added into database!")
+                print("Got JWT")
                 
             else:
                 print("Something went wrong!")
@@ -72,14 +86,52 @@ class CUSTOM_OT_Post_Operator(Operator):
 
 
 
+    def addModel(self, context, jwt):
 
-    def uploadModel(self, context, mid):
+        data = {
+            "modName" : context.scene.my_props.mod_name,
+            "modDesc" : context.scene.my_props.mod_desc,
+            "artId" : context.scene.my_props.ais,
+            "uname": context.scene.my_props.uname
+        }
+
+        headers = {
+            "Authorization": "Bearer "+jwt
+        }
+
+        api_url = 'http://localhost:3001/model/add'
+
+        response = None
+
+        try:
+            response = requests.post(url=api_url, data = data, headers=headers)
+
+            if response.ok:
+                print("Added into database!")
+                
+            else:
+                print("Something went wrong!")
+                print(response.text)
+                
+
+
+        except requests.exceptions.RequestException as e:
+            self.report({'ERROR'}, "API error:" + e)
+        
+
+        return response
+
+
+
+
+
+    def uploadModel(self, context, mid, uid, jwt):
         # make a temporary directory
         tempdir = tempfile.mkdtemp()
         file_ext = ".glb"
 
-        # TODO: change this
-        file_name = "test"
+
+        file_name = "upload"
 
         filepath = os.path.join(tempdir, file_name)
 
@@ -145,11 +197,14 @@ class CUSTOM_OT_Post_Operator(Operator):
         fp = open(filepath, 'rb')
         file = {'file' : (file_name + file_ext, fp, "multipart/form-data")}
 
-        # TODO: change username
         data = {
-            "user" : context.scene.my_props.uname,
+            "user" : uid,
             "model" : mid,
             "article" : context.scene.my_props.ais,
+        }
+
+        headers = {
+            "Authorization": "Bearer " + jwt
         }
 
 
@@ -158,7 +213,7 @@ class CUSTOM_OT_Post_Operator(Operator):
         response = None 
 
         try:
-            response = requests.post(url=api_url, files=file, data = data)
+            response = requests.post(url=api_url, files=file, data = data, headers=headers)
 
             if response.ok:
                 print("Upload completed successfully!")
@@ -198,7 +253,7 @@ def parseArticleData(data):
     for article in data['DATA']:
         id = str(article[PageData.COLUMN_01])
         name = article[PageData.COLUMN_02]
-        # TODO: add decsription
+        # TODO: add description
         desc = "n/a"
 
         row = (id, name, desc)
@@ -265,7 +320,7 @@ class CUSTOM_OT_Article_Operator(Operator):
 
 
     fltr : bpy.props.StringProperty(name="Filter:", update=setFilter)
-    slct : bpy.props.EnumProperty(items=getArticles,name="Select article")
+    slct : bpy.props.EnumProperty(items=getArticles, name="Select article")
 
     # defines if the operator should be enabled
     @classmethod
