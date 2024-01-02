@@ -51,6 +51,8 @@ class CUSTOM_OT_Post_Operator(Operator):
 
         self.report({'INFO'},"Uploaded successfully")
 
+        #TODO: reset input fields
+
         return {'FINISHED'}
     
 
@@ -96,7 +98,7 @@ class CUSTOM_OT_Post_Operator(Operator):
         }
 
         headers = {
-            "Authorization": "Bearer "+jwt
+            "Authorization": "Bearer " + jwt
         }
 
         api_url = 'http://localhost:3001/model/add'
@@ -134,7 +136,7 @@ class CUSTOM_OT_Post_Operator(Operator):
         file_name = "upload"
 
         filepath = os.path.join(tempdir, file_name)
-
+        filepath += file_ext
 
         bpy.ops.export_scene.gltf(filepath=filepath, # might change
                                   check_existing=True, 
@@ -191,8 +193,52 @@ class CUSTOM_OT_Post_Operator(Operator):
                                   will_save_settings=False, 
                                   filter_glob='*.glb;*.gltf')
 
+        """
+        bpy.ops.export_scene.fbx(filepath=filepath,
+                                 check_existing=True,
+                                 filter_glob='*.fbx', 
+                                 use_selection=False, 
+                                 use_visible=False, 
+                                 use_active_collection=False, 
+                                 global_scale=1.0, 
+                                 apply_unit_scale=True, 
+                                 apply_scale_options='FBX_SCALE_NONE', 
+                                 use_space_transform=True, 
+                                 bake_space_transform=False, 
+                                 object_types={'ARMATURE','EMPTY', 'MESH', 'OTHER'}, 
+                                 use_mesh_modifiers=True, 
+                                 use_mesh_modifiers_render=True, 
+                                 mesh_smooth_type='OFF', 
+                                 #colors_type='SRGB', 
+                                 #prioritize_active_color=False, 
+                                 use_subsurf=False, 
+                                 use_mesh_edges=False, 
+                                 use_tspace=False, 
+                                 use_triangles=False, 
+                                 use_custom_props=False, 
+                                 add_leaf_bones=True, 
+                                 primary_bone_axis='Y', 
+                                 secondary_bone_axis='X', 
+                                 use_armature_deform_only=False, 
+                                 armature_nodetype='NULL', 
+                                 bake_anim=True, 
+                                 bake_anim_use_all_bones=True, 
+                                 bake_anim_use_nla_strips=True, 
+                                 bake_anim_use_all_actions=True, 
+                                 bake_anim_force_startend_keying=True, 
+                                 bake_anim_step=1.0, 
+                                 bake_anim_simplify_factor=1.0, 
+                                 path_mode='AUTO', 
+                                 embed_textures=False, 
+                                 batch_mode='OFF', 
+                                 use_batch_own_dir=True, 
+                                 use_metadata=True, 
+                                 axis_forward='-X', # default -Z
+                                 axis_up='Z') # default Y
+        """
+
         # add file extention for opening the file 
-        filepath = filepath + file_ext
+        # filepath = filepath + file_ext
         # read the binary file
         fp = open(filepath, 'rb')
         file = {'file' : (file_name + file_ext, fp, "multipart/form-data")}
